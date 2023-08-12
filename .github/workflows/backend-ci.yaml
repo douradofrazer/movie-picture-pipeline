@@ -27,7 +27,9 @@ jobs:
 
     - name: Lint
       run: |
-        cd starter/backend && pipenv run lint
+        cd starter/backend
+        pipenv install flake8
+        pipenv run lint
 
   test:
     runs-on: ubuntu-latest
@@ -66,8 +68,10 @@ jobs:
 
     - name: Install dependencies
       run: |
+        cd starter/backend
+        python -m pip install --upgrade pip
         pip install pipenv --user
-        cd starter/backend && pipenv install
+        pipenv install
 
     - name: Build
       run: |
