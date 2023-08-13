@@ -1,0 +1,97 @@
+name: 'Fontend CI'
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js 
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest
+
+      - name: Cache npm
+        id: cache-npm
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-npm
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ env.cache-name }}-${{ hashFiles('**/starter/frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-${{ env.cache-name }}-
+
+      - name: Install dependencies
+        run: |
+          cd starter/frontend && npm ci
+
+      - name: Lint
+        run: |
+          cd starter/frontend && npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js 
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-npm
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ env.cache-name }}-${{ hashFiles('**/starter/frontend/package-lock.json') }}
+
+      - name: Install dependencies
+        run: |
+          cd starter/frontend && npm ci
+
+      - name: Run tests
+        id: test
+        run: |
+          cd starter/frontend && npm test
+
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js 
+        uses: actions/setup-node@v3
+        with:
+          node-version: latest
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-npm
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-${{ env.cache-name }}-${{ hashFiles('**/starter/frontend/package-lock.json') }}
+
+      - name: Install dependencies
+        run: |
+          cd starter/frontend && npm ci
+
+      - name: Build
+        if: steps.lint.outcome == 'success' && steps.test.outcome == 'success'
+        run: |
+          cd starter/frontend && npm run build
